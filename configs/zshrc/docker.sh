@@ -28,6 +28,7 @@
 #                                                                          #
 ############################################################################
 
+# retrieves the names of all running Docker containers.
 function dnames-fn {
 	for ID in `docker ps | awk '{print $1}' | grep -v 'CONTAINER'`
 	do
@@ -35,6 +36,12 @@ function dnames-fn {
 	done
 }
 
+# $ dnames-fn
+# example_container_1
+# example_container_2
+# ...
+
+# retrieves the IP addresses of all named running Docker containers
 function dip-fn {
     echo "IP addresses of all named running containers"
 
@@ -47,47 +54,70 @@ function dip-fn {
     unset OUT
 }
 
+# $ dip-fn
+# IP addresses of all named running containers
+# example_container_1      172.17.0.2
+# example_container_2      172.17.0.3
+# ...
+
+# allows you to run a command inside a running Docker container
 function dex-fn {
 	docker exec -it $1 ${2:-bash}
 }
+# e.g. dex-fn <container_id> ls -al
 
+# inspects the Docker container with the given ID. 
 function di-fn {
 	docker inspect $1
 }
+# e.g $ di-fn example_container_1
 
+# displays the logs of the Docker container with the given ID in real-time. 
 function dl-fn {
 	docker logs -f $1
 }
+# e.g. $ dl-fn example_container_1
 
+# runs a new Docker container with the given image and command
 function drun-fn {
 	docker run -it $1 $2
 }
+# e.g. $ drun-fn ubuntu bash
 
+# runs a command in a Docker Compose service
 function dcr-fn {
 	docker-compose run $@
 }
+# e.g. $ dcr-fn webserver ls -al
 
+# stops and removes a Docker container with the given ID
 function dsr-fn {
 	docker stop $1;docker rm $1
 }
+# $ dsr-fn example_container_1
 
+# removes all stopped Docker containers
 function drmc-fn {
        docker rm $(docker ps --all -q -f status=exited)
 }
 
+# removes dangling Docker images
 function drmid-fn {
        imgs=$(docker images -q -f dangling=true)
        [ ! -z "$imgs" ] && docker rmi "$imgs" || echo "no dangling images."
 }
 
 # in order to do things like dex $(dlab label) sh
+# returns the ID of a running Docker container with the specified label.
 function dlab {
        docker ps --filter="label=$1" --format="{{.ID}}"
 }
 
+# used to run docker-compose commands, e.g. start Docker Compose stack in detached mode
 function dc-fn {
         docker-compose $*
 }
+# e.g: $ dc-fn up -d
 
 function d-aws-cli-fn {
     docker run \
@@ -96,6 +126,7 @@ function d-aws-cli-fn {
            -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
            amazon/aws-cli:latest $1 $2 $3
 }
+# e.g. $ d-aws-cli-fn s3 ls my-bucket
 
 alias daws=d-aws-cli-fn
 alias dc=dc-fn
